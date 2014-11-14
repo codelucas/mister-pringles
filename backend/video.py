@@ -7,15 +7,14 @@ from multiprocessing import Process, Queue
 
 from multiprocessing.pool import ThreadPool
 from collections import deque
-import clock
 import time
 
 def process_frame(frame):
-        # # some intensive computation...
-        # frame = cv2.medianBlur(frame, 19)
-        # frame = cv2.medianBlur(frame, 19)
+		# # some intensive computation...
+		# frame = cv2.medianBlur(frame, 19)
+		# frame = cv2.medianBlur(frame, 19)
 		# frame = cv2.imread('face.jpg')
-       # Added
+	   # Added
 	gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
 	#cv2.imshow('frame',gray)
@@ -36,11 +35,33 @@ def process_frame(frame):
 			x_offset = x + ex;
 			for c in range(0,3):
 				frame[y_offset:y_offset+eye.shape[0], x_offset:x_offset+eye.shape[1], c] = eye[:,:,c] * (eye[:,:,3]/255.0) +  frame[y_offset:y_offset+eye.shape[0], x_offset:x_offset+eye.shape[1], c] * (1.0 - eye[:,:,3]/255.0)                 
+
+		mouths = mouth_cascade.detectMultiScale(roi_gray,1.3,110)
+		if len(mouths) > 0:
+			for i in range(len(mouths)):
+				print i
+				(mx,my,mw,mh) = mouths[i]
+				for (ex, ey, ew, eh) in eyes:
+					if (ex <= mx+mw) and (ex+ew >= mx) and (ey <= my+mh) and (ey+eh >= my):
+						np.delete(mouths, i)
+
+		for (ex,ey,ew,eh) in mouths:
+			ew_l = int(ew * 2.5)
+			eh_l = int(eh * 2.5)
+			mouth = cv2.resize(mouth_raw, (ew_l, eh_l))
+			y_offset = y + int(ey / 1.1)
+			x_offset = x + ex / 2
+			for c in range(0,3):
+				frame[y_offset:y_offset+mouth.shape[0], x_offset:x_offset+mouth.shape[1], c] = mouth[:,:,c] * (mouth[:,:,3]/255.0) +  frame[y_offset:y_offset+mouth.shape[0], x_offset:x_offset+mouth.shape[1], c] * (1.0 - mouth[:,:,3]/255.0)                 
+		
 	return frame
 
-face_cascade = cv2.CascadeClassifier('/Users/facebook/mister-pringles/haarcascade_frontalface_default.xml')
-eye_cascade = cv2.CascadeClassifier('/Users/facebook/mister-pringles/haarcascade_eye.xml')
+face_cascade = cv2.CascadeClassifier('haar/haarcascade_frontalface_default.xml')
+eye_cascade = cv2.CascadeClassifier('haar/haarcascade_eye.xml')
+mouth_cascade = cv2.CascadeClassifier('haar/haarcascade_mcs_mouth.xml')
+
 eye_raw = cv2.imread('eye.png', -1)
+mouth_raw = cv2.imread('beard1.png', -1)
 cap = cv2.VideoCapture(0)
 
 # threaded_mode = True
@@ -74,11 +95,11 @@ while True:
 
 
 class DummyTask:
-    def __init__(self, data):
-        self.data = data
-    def ready(self):
-        return True
-    def get(self):
-        return self.data
+	def __init__(self, data):
+		self.data = data
+	def ready(self):
+		return True
+	def get(self):
+		return self.data
 
 
