@@ -13,9 +13,9 @@ function swap_imgs() {
 
     imgs.each(function(index) {
         console.log('[page url] ' + $(this).attr('src') );
-        //$.post('http://localhost:8000', {'url': $(this).attr('src')}, function(data) {
-        //    console.log('[post success] ' + data.url); 
-        //}, 'json');
+        $.post('http://localhost:8000', $(this).attr('src'), function(data) {
+            console.log('[post success] ' + data.url); 
+        }, 'json');
         $(this).replaceWith(
             "<img src='http://www.clker.com/cliparts/X/C/L/8/R/Z/red-box-hi.png'>");
     });
